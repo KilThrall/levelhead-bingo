@@ -1,0 +1,41 @@
+package jump
+simple, 3
+explore
+secrets
+brawler
+blasters
+precise
+music box
+well-paced
+powerups
+beginner-friendly, 1
+clever
+kaizo, 1
+intense, 1
+boss
+chase
+panic moments
+casual, 1
+complex, 3
+zipper, 2
+choice
+puzzling
+precarious
+waylay, 2
+troll
+teaching
+traps
+tiptow, 2
+don't move, 1
+contraption
+elite
+switch-heavy
+raceway
+throwing mastery
+paths
+rebound, 2
+bombs
+single screen
+ripcord, 2
+shade, 2
+shop
