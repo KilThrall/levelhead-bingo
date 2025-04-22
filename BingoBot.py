@@ -136,7 +136,7 @@ def download_levels_to_file():
                 for level in data:
                     level_id = level.get('levelId', '').replace('\\n', ' ')
                     tags = ', '.join(level.get('tagNames', [])).replace('\\n', ' ')
-                    line = f"{level_id}, {tags}"
+                    line = f"{level_id}, {tags}\n"
                     
                     f.write(line)
             messagebox.showinfo("Download Complete", f"Downloaded {len(data)} levels to levels.txt")
