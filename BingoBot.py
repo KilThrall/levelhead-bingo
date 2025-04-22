@@ -105,19 +105,66 @@ def check_bingos(marked):
     return bingos
 
 def download_levels_to_file():
+    from datetime import datetime, timedelta
     import requests
-    url = "https://www.bscotch.net/api/levelhead/levels?limit=128&tag=race&dailyBuild=true"
-    headers = {"User-Agent": "PythonClient", "Accept": "application/json"}
-    response = requests.get(url, headers=headers)
-    if response.ok:
-        data = response.json().get("data", [])
-        with open("levels.txt", "w", encoding="utf-8") as f:
-            for level in data:
-                line = f"{level['levelId']}, {', '.join(level.get('tagNames', []))}\n"
-                f.write(line)
-        messagebox.showinfo("Download Complete", f"Downloaded {len(data)} levels to levels.txt")
-    else:
-        messagebox.showerror("Download Failed", "Could not retrieve level data from server.")
+
+    def start_download(min_diamonds, max_diamonds, win):
+        now = datetime.utcnow()
+        start_date = datetime(2020, 1, 1)
+        total_days = (now - start_date).days
+
+        random_day = random.randint(0, total_days)
+        date = start_date + timedelta(days=random_day)
+        max_created_at = date.strftime("%Y-%m-%dT%H:%M:%SZ").replace(':', '%3A')
+
+
+        min_day_offset = random.randint(10, 25)
+        min_date = date - timedelta(days=min_day_offset)
+        min_created_at = min_date.strftime("%Y-%m-%dT%H:%M:%SZ").replace(':', '%3A')
+
+        url = (
+            f"https://www.bscotch.net/api/levelhead/levels?limit=64&dailyBuild=true"
+            f"&tags=race&minDiamonds={min_diamonds}&maxDiamonds={max_diamonds}"
+            f"&maxCreatedAt={max_created_at}&minCreatedAt={min_created_at}"
+        )
+
+        headers = {"User-Agent": "PythonClient", "Accept": "application/json"}
+        response = requests.get(url, headers=headers)
+        if response.ok:
+            data = response.json().get("data", [])
+            with open("levels.txt", "w", encoding="utf-8") as f:
+                for level in data:
+                    level_id = level.get('levelId', '').replace('\\n', ' ')
+                    tags = ', '.join(level.get('tagNames', [])).replace('\\n', ' ')
+                    line = f"{level_id}, {tags}"
+                    
+                    f.write(line)
+            messagebox.showinfo("Download Complete", f"Downloaded {len(data)} levels to levels.txt")
+        else:
+            messagebox.showerror("Download Failed", "Could not retrieve level data from server.")
+        win.destroy()
+
+    # Create UI for diamond selection
+    window = tk.Toplevel()
+    window.title("Select Diamond Range")
+
+    tk.Label(window, text="Minimum Diamonds:").grid(row=0, column=0, padx=10, pady=5)
+    min_var = tk.IntVar(value=0)
+    min_spin = tk.Spinbox(window, from_=0, to=99, textvariable=min_var, width=5)
+    min_spin.grid(row=0, column=1, pady=5)
+
+    tk.Label(window, text="Maximum Diamonds:").grid(row=1, column=0, padx=10, pady=5)
+    max_var = tk.IntVar(value=5)
+    max_spin = tk.Spinbox(window, from_=0, to=99, textvariable=max_var, width=5)
+    max_spin.grid(row=1, column=1, pady=5)
+
+    tk.Button(
+        window,
+        text="Download",
+        command=lambda: start_download(min_var.get(), max_var.get(), window)
+    ).grid(row=2, column=0, columnspan=2, pady=10)
+
+    window.grab_set()
 
 # === GUI ===
 
@@ -152,6 +199,9 @@ class BingoGUI:
                     label = tk.Label(frame, text=label_text, width=15, height=3,
                                      wraplength=100, justify="center", bg="white", font=("Arial", 10))
                     label.pack()
+
+                    copy_btn = tk.Button(frame, text="copy", command=lambda text=level_id if self.mode == "speed" else content[0]: self.copy_to_clipboard(text))
+                    copy_btn.pack(pady=1)
 
                     tag_label = tk.Label(frame, text=tags, font=("Arial", 8), fg="gray")
                     tag_label.pack()
@@ -227,6 +277,11 @@ class BingoGUI:
             self.message_label.config(text="Bingo! " + ", ".join(bingos))
         else:
             self.message_label.config(text="")
+
+    def copy_to_clipboard(self, text):
+        self.master.clipboard_clear()
+        self.master.clipboard_append(text)
+        self.master.update()
 
     def cycle_color(self, label):
         current_color = label.cget("bg")
